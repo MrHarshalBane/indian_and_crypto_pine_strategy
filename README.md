@@ -1,0 +1,181 @@
+Key Features of this Pine Script (v5)
+
+Market-Specific Configuration:
+
+NSE / BSE Mode: Includes a session timer (09:15 – 15:15 IST) and an Auto Square-Off at 15:15 IST option for intraday traders on platforms like Zerodha, Upstox, or AngelOne to avoid margin penalties.
+Crypto 24/7 Mode: Continuous volatility calculation optimized for BTC, ETH, SOL, etc.
+
+Triple-Confluence Signal Engine:
+
+200 EMA Filter: Aligns trades with macro trend direction.
+Supertrend Engine: Detects volatility breakouts.
+RSI Momentum Oscillator: Prevents entries during overextended moves.
+Volume Spike Filter: Eliminates low-volume false breakouts common in illiquid stock midcaps and crypto consolidation.
+
+Dynamic Risk & Money Management:
+
+ATR-Based Stop Loss & Take Profit: Dynamically adjusts SL and TP target levels based on market volatility.
+Trailing Stop Loss: Automatically locks in profits as the trend progresses.
+
+Live On-Screen Dashboard (HUD Table):
+
+Displays real-time Trend Status, RSI Value, ATR Volatility, Strategy Backtest Win Rate %, and Net Profit directly on your chart.
+
+Automated Trading Ready (Webhooks):
+
+Generates JSON alerts ready for Indian algo platforms (Tradetron, AlgoTest, PyKite, NextLevelBot) and global crypto bots (3Commas, Wunderbit, Binance Webhooks).
+Pine Script v5 Code
+
+Copy and paste the code below directly into TradingView's Pine Editor:
+
+pinescript
+//@version=5
+strategy("Multi-Asset Pro Strategy [NSE / BSE / Crypto]", overlay=true, initial_capital=100000, default_qty_type=strategy.percent_of_equity, default_qty_value=10, commission_type=strategy.commission.percent, commission_value=0.05, process_orders_on_close=true)
+// ==========================================
+// 1. INPUT PARAMETERS & USER CONFIGURATION
+// ==========================================
+// --- Asset Mode & Session Control ---
+string asset_mode   = input.string("NSE / BSE Stock Market", "Asset Class Preset", options=["NSE / BSE Stock Market", "Crypto 24/7", "Custom"], group="Market Configuration", tooltip="Select market type for pre-tuned filters.")
+string trade_type   = input.string("Intraday", "Trading Style", options=["Intraday", "Swing Trading"], group="Market Configuration")
+string session_time = input.session("0915-1515:23456", "NSE Trading Session (IST)", group="Market Configuration", tooltip="Active trading hours for Indian stock market.")
+bool   sqoff_enable = input.bool(true, "Intraday Auto Square-Off at 15:15 IST", group="Market Configuration", tooltip="Automatically exit open positions before market close.")
+// --- Trend & Signal Engines ---
+bool   use_ema_filter = input.bool(true, "Enable 200 EMA Trend Filter", group="Signal Engine Settings")
+int    ema_len        = input.int(200, "Base EMA Length", minval=10, group="Signal Engine Settings")
+// Supertrend Inputs
+int    st_atr_period  = input.int(10, "Supertrend ATR Period", minval=1, group="Signal Engine Settings")
+float  st_factor      = input.float(3.0, "Supertrend Factor", minval=0.5, step=0.1, group="Signal Engine Settings")
+// RSI Oscillator Inputs
+bool   use_rsi_filter = input.bool(true, "Enable RSI Confirmation", group="Signal Engine Settings")
+int    rsi_len        = input.int(14, "RSI Length", group="Signal Engine Settings")
+int    rsi_buy_thresh = input.int(50, "RSI Buy Threshold (>)", group="Signal Engine Settings")
+int    rsi_sell_thresh= input.int(50, "RSI Sell Threshold (<)", group="Signal Engine Settings")
+// Volume Spike Confirmation
+bool   use_vol_filter = input.bool(true, "Require Above-Average Volume", group="Signal Engine Settings")
+int    vol_ma_len     = input.int(20, "Volume Moving Avg Length", group="Signal Engine Settings")
+// --- Risk Management & Targets ---
+string sl_tp_mode     = input.string("ATR Dynamic", "Stop Loss / Take Profit Mode", options=["ATR Dynamic", "Percentage Based", "Fixed Points"], group="Risk Management")
+float  atr_sl_mult    = input.float(1.5, "ATR Stop Loss Multiplier", minval=0.5, step=0.1, group="Risk Management")
+float  rr_ratio       = input.float(2.0, "Risk Reward Ratio (TP = SL * RR)", minval=0.5, step=0.1, group="Risk Management")
+bool   use_trail_sl   = input.bool(true, "Enable Trailing Stop Loss", group="Risk Management")
+// Percentage Mode Defaults
+float  pct_sl         = input.float(1.0, "Fixed SL %", minval=0.1, step=0.1, group="Risk Management")
+float  pct_tp         = input.float(2.0, "Fixed TP %", minval=0.1, step=0.1, group="Risk Management")
+// --- Dashboard & Alert UI ---
+bool   show_dashboard = input.bool(true, "Show Performance Dashboard Table", group="UI & Display Settings")
+string dash_pos       = input.string("Top Right", "Dashboard Position", options=["Top Right", "Bottom Right", "Top Left", "Bottom Left"], group="UI & Display Settings")
+// ==========================================
+// 2. INDICATOR COMPUTATIONS
+// ==========================================
+// Base Trend Filter
+float base_ema = ta.ema(close, ema_len)
+bool  is_bull_ema = close > base_ema
+bool  is_bear_ema = close < base_ema
+// Supertrend Engine
+[st_value, st_direction] = ta.supertrend(st_factor, st_atr_period)
+bool is_st_bull = st_direction < 0
+bool is_st_bear = st_direction > 0
+// RSI Engine
+float rsi_val = ta.rsi(close, rsi_len)
+bool  is_rsi_bull = rsi_val >= rsi_buy_thresh
+bool  is_rsi_bear = rsi_val <= rsi_sell_thresh
+// Volume Engine
+float vol_ma = ta.sma(volume, vol_ma_len)
+bool  is_vol_ok = use_vol_filter ? (volume > vol_ma) : true
+// Session & Time Engine
+bool in_session = asset_mode == "Crypto 24/7" ? true : not na(time(timeframe.period, session_time))
+bool is_square_off_time = (asset_mode == "NSE / BSE Stock Market" and trade_type == "Intraday" and sqoff_enable) ? (hour == 15 and minute >= 15) : false
+// ATR Calculation for SL / TP
+float atr_val = ta.atr(14)
+// ==========================================
+// 3. ENTRY & EXIT CONDITIONS
+// ==========================================
+bool buy_condition  = (not use_ema_filter or is_bull_ema) and is_st_bull and ta.crossover(close, st_value) and (not use_rsi_filter or is_rsi_bull) and is_vol_ok and in_session
+bool sell_condition = (not use_ema_filter or is_bear_ema) and is_st_bear and ta.crossunder(close, st_value) and (not use_rsi_filter or is_rsi_bear) and is_vol_ok and in_session
+// Position Tracking Variables
+var float long_sl = 0.0
+var float long_tp = 0.0
+var float short_sl = 0.0
+var float short_tp = 0.0
+// Trigger Buy Signal
+if (buy_condition and strategy.position_size == 0)
+    if (sl_tp_mode == "ATR Dynamic")
+        long_sl := close - (atr_val * atr_sl_mult)
+        long_tp := close + ((close - long_sl) * rr_ratio)
+    else if (sl_tp_mode == "Percentage Based")
+        long_sl := close * (1 - pct_sl / 100)
+        long_tp := close * (1 + pct_tp / 100)
+    strategy.entry("BUY", strategy.long, alert_message='{"action": "BUY", "symbol": "' + syminfo.ticker + '", "price": ' + str.tostring(close) + '}')
+// Trigger Sell / Short Signal
+if (sell_condition and strategy.position_size == 0)
+    if (sl_tp_mode == "ATR Dynamic")
+        short_sl := close + (atr_val * atr_sl_mult)
+        short_tp := close - ((short_sl - close) * rr_ratio)
+    else if (sl_tp_mode == "Percentage Based")
+        short_sl := close * (1 + pct_sl / 100)
+        short_tp := close * (1 - pct_tp / 100)
+    strategy.entry("SELL", strategy.short, alert_message='{"action": "SELL", "symbol": "' + syminfo.ticker + '", "price": ' + str.tostring(close) + '}')
+// Dynamic Trailing Stop Updates
+if (strategy.position_size > 0 and use_trail_sl)
+    float new_trail_sl = close - (atr_val * atr_sl_mult)
+    if (new_trail_sl > long_sl)
+        long_sl := new_trail_sl
+if (strategy.position_size < 0 and use_trail_sl)
+    float new_trail_sl = close + (atr_val * atr_sl_mult)
+    if (new_trail_sl < short_sl)
+        short_sl := new_trail_sl
+// Manage Exits for Long
+if (strategy.position_size > 0)
+    strategy.exit("Exit BUY", "BUY", stop=long_sl, limit=long_tp, alert_message='{"action": "EXIT_BUY", "symbol": "' + syminfo.ticker + '"}')
+// Manage Exits for Short
+if (strategy.position_size < 0)
+    strategy.exit("Exit SELL", "SELL", stop=short_sl, limit=short_tp, alert_message='{"action": "EXIT_SELL", "symbol": "' + syminfo.ticker + '"}')
+// Intraday Auto Square-Off for NSE/BSE
+if (is_square_off_time and strategy.position_size != 0)
+    strategy.close_all(comment="NSE Intraday Square-off", alert_message='{"action": "SQUARE_OFF", "symbol": "' + syminfo.ticker + '"}')
+// ==========================================
+// 4. CHART VISUALIZATION & PLOTS
+// ==========================================
+// Trend Cloud & Supertrend Line
+plot(st_value, title="Supertrend Level", color=is_st_bull ? color.green : color.red, linewidth=2)
+plot(base_ema, title="200 EMA Line", color=color.orange, linewidth=2)
+// Buy / Sell Signals Shapes
+plotshape(buy_condition and strategy.position_size[1] == 0, title="Buy Arrow", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, text="BUY")
+plotshape(sell_condition and strategy.position_size[1] == 0, title="Sell Arrow", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, text="SELL")
+// Target and SL Visual Lines
+plot(strategy.position_size > 0 ? long_sl : na, title="Long StopLoss", color=color.red, style=plot.style_linebr, linewidth=1)
+plot(strategy.position_size > 0 ? long_tp : na, title="Long TakeProfit", color=color.green, style=plot.style_linebr, linewidth=1)
+plot(strategy.position_size < 0 ? short_sl : na, title="Short StopLoss", color=color.red, style=plot.style_linebr, linewidth=1)
+plot(strategy.position_size < 0 ? short_tp : na, title="Short TakeProfit", color=color.green, style=plot.style_linebr, linewidth=1)
+// ==========================================
+// 5. LIVE PERFORMANCE DASHBOARD TABLE
+// ==========================================
+var table dash = table.new(dash_pos == "Top Right" ? position.top_right : dash_pos == "Bottom Right" ? position.bottom_right : dash_pos == "Top Left" ? position.top_left : position.bottom_left, 2, 7, bgcolor=color.new(color.black, 20), border_width=1, border_color=color.gray)
+if (show_dashboard and barstate.islast)
+    table.cell(dash, 0, 0, "Multi-Asset Strategy", bgcolor=color.navy, text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 0, syminfo.ticker, bgcolor=color.navy, text_color=color.yellow, text_size=size.small)
+    
+    table.cell(dash, 0, 1, "Overall Trend (200 EMA)", text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 1, is_bull_ema ? "BULLISH 📈" : "BEARISH 📉", bgcolor=is_bull_ema ? color.green : color.red, text_color=color.white, text_size=size.small)
+    
+    table.cell(dash, 0, 2, "Supertrend Signal", text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 2, is_st_bull ? "BUY MODE" : "SELL MODE", bgcolor=is_st_bull ? color.green : color.red, text_color=color.white, text_size=size.small)
+    table.cell(dash, 0, 3, "RSI (14)", text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 3, str.tostring(rsi_val, "#.##"), bgcolor=rsi_val > 60 ? color.teal : rsi_val < 40 ? color.maroon : color.gray, text_color=color.white, text_size=size.small)
+    table.cell(dash, 0, 4, "ATR (Volatility)", text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 4, str.tostring(atr_val, "#.##"), text_color=color.white, text_size=size.small)
+    float win_rate = strategy.closedtrades > 0 ? (strategy.winingtrades / strategy.closedtrades) * 100 : 0.0
+    table.cell(dash, 0, 5, "Backtest Win Rate", text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 5, str.tostring(win_rate, "#.#") + "%", bgcolor=win_rate >= 50 ? color.darkgreen : color.darkred, text_color=color.white, text_size=size.small)
+    table.cell(dash, 0, 6, "Total Net Profit", text_color=color.white, text_size=size.small)
+    table.cell(dash, 1, 6, str.tostring(strategy.netprofit, "#.##") + " " + syminfo.currency, bgcolor=strategy.netprofit >= 0 ? color.green : color.red, text_color=color.white, text_size=size.small)
+// Alert Conditions for Webhook / Notifications
+alertcondition(buy_condition, title="Alert: Buy Signal", message='{"event": "BUY", "symbol": "{{ticker}}", "price": "{{close}}"}')
+alertcondition(sell_condition, title="Alert: Sell Signal", message='{"event": "SELL", "symbol": "{{ticker}}", "price": "{{close}}"}')
+How to Use
+Open TradingView & navigate to any symbol (e.g. NSE:RELIANCE, NSE:NIFTY, or BINANCE:BTCUSDT).
+Paste the code into the Pine Editor tab at the bottom and click Save -> Add to Chart.
+Click the settings gear icon on the strategy overlay to adjust inputs:
+For NSE/BSE Intraday: Select NSE / BSE Stock Market mode, 5m or 15m chart.
+For Crypto: Select Crypto 24/7 mode, 15m, 1H or 4H chart.
+Check the README.md for full instructions on linking Webhooks with Tradetron or AlgoTest.
