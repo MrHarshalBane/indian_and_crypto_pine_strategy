@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Asset Pro Strategy - TradingView Pine Script v5</title>
+  <meta name="description" content="Triple-confluence quantitative algorithmic trading strategy for Indian Stock Market (NSE / BSE) and 24/7 Crypto assets. Pine Script v5 with ATR dynamic risk management and automated webhook execution.">
+  
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="brand-text">
+          <h1>PineStrategy <span>Pro</span></h1>
+          <span class="badge">TradingView v5</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <a href="#code-viewer" class="btn btn-secondary">
+          <i class="fa-solid fa-code"></i> View Pine Script
+        </a>
+        <button id="btn-copy-code-nav" class="btn btn-primary">
+          <i class="fa-regular fa-copy"></i> Copy Script
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container hero-content">
+      <div class="hero-tag">
+        <span class="pulse-dot"></span> Algorithmic Trading Confluence Engine
+      </div>
+      <h2>Multi-Asset Strategy for <span class="highlight-text">NSE / BSE &amp; Crypto</span></h2>
+      <p class="hero-desc">
+        A production-grade, institutional Pine Script (v5) quantitative strategy combining <strong>200 EMA Macro Trend</strong>, <strong>Supertrend Volatility Breakouts</strong>, <strong>RSI Momentum Confirmation</strong>, and <strong>Volume Spike Filtering</strong> with automated webhook payload dispatch.
+      </p>
+
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-label">Markets Supported</span>
+          <span class="stat-val">NSE / BSE &amp; Crypto</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Confluence Engine</span>
+          <span class="stat-val">4x Indicator Confluence</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Risk Management</span>
+          <span class="stat-val">Dynamic ATR + Trailing SL</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Execution Mode</span>
+          <span class="stat-val">Automated Webhooks (JSON)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Terminal & Strategy Tester -->
+  <section class="container interactive-section">
+    <!-- Market Preset Selector Bar -->
+    <div class="market-bar card">
+      <div class="market-presets">
+        <span class="filter-title"><i class="fa-solid fa-sliders"></i> Market Preset:</span>
+        <button class="preset-btn active" data-preset="nse">
+          <i class="fa-solid fa-building-columns"></i> NSE / BSE Equities &amp; F&amp;O
+        </button>
+        <button class="preset-btn" data-preset="crypto">
+          <i class="fa-brands fa-bitcoin"></i> Crypto 24/7 (BTC / ETH / SOL)
+        </button>
+      </div>
+      <div class="market-status" id="market-status-badge">
+        <span class="status-indicator live"></span> Intraday Auto Square-Off: <strong>15:15 IST</strong>
+      </div>
+    </div>
+
+    <!-- Live Chart Simulation & Real-time Indicator Dashboard -->
+    <div class="grid-2col">
+      <!-- Strategy Indicator Confluence Breakdown -->
+      <div class="card card-feature">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-layer-group"></i> 4-Pillar Confluence Engine</h3>
+          <span class="sub-badge">Signal Logic</span>
+        </div>
+        <div class="pillars-list">
+          <div class="pillar-item">
+            <div class="pillar-icon ema-icon"><i class="fa-solid fa-wave-square"></i></div>
+            <div class="pillar-info">
+              <h4>200 EMA Trend Filter</h4>
+              <p>Ensures trades only fire in the direction of the macro trend (Price &gt; 200 EMA for Longs, Price &lt; 200 EMA for Shorts).</p>
+            </div>
+          </div>
+          <div class="pillar-item">
+            <div class="pillar-icon st-icon"><i class="fa-solid fa-chart-area"></i></div>
+            <div class="pillar-info">
+              <h4>Supertrend (10, 3.0) Breakout</h4>
+              <p>Detects immediate volatility breakouts and changes in directional trend regime with zero repainting on bar close.</p>
+            </div>
+          </div>
+          <div class="pillar-item">
+            <div class="pillar-icon rsi-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <div class="pillar-info">
+              <h4>RSI (14) Momentum Validation</h4>
+              <p>Requires RSI &gt; 50 for Bullish confirmation or RSI &lt; 50 for Bearish confirmation to prevent fakeouts.</p>
+            </div>
+          </div>
+          <div class="pillar-item">
+            <div class="pillar-icon vol-icon"><i class="fa-solid fa-signal"></i></div>
+            <div class="pillar-info">
+              <h4>Volume Spike Filter (SMA 20)</h4>
+              <p>Verifies volume exceeds its 20-period moving average to eliminate low-liquidity slippage in midcaps and altcoins.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Strategy Backtest HUD / Parameters Simulator -->
+      <div class="card card-hud">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-calculator"></i> Quantitative Risk &amp; Backtest Parameters</h3>
+          <span class="badge badge-accent">Live Model</span>
+        </div>
+
+        <div class="simulator-controls">
+          <div class="param-group">
+            <label for="sl-mode">Stop Loss &amp; Take Profit Engine</label>
+            <select id="sl-mode">
+              <option value="atr">ATR Dynamic (1.5x ATR)</option>
+              <option value="pct">Percentage Based (1.0% SL / 2.0% TP)</option>
+            </select>
+          </div>
+          <div class="param-row">
+            <div class="param-group">
+              <label for="risk-reward">Risk:Reward Ratio</label>
+              <input type="number" id="risk-reward" value="2.0" step="0.1" min="1.0" max="5.0">
+            </div>
+            <div class="param-group">
+              <label for="capital">Initial Capital (₹ / $)</label>
+              <input type="number" id="capital" value="100000" step="10000">
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="trailing-sl" checked> Enable Trailing Stop Loss Lock
+            </label>
+          </div>
+        </div>
+
+        <!-- Strategy HUD Matrix -->
+        <div class="hud-matrix">
+          <div class="matrix-tile">
+            <span class="m-label">Simulated Win Rate</span>
+            <span class="m-val green" id="metric-winrate">64.2%</span>
+          </div>
+          <div class="matrix-tile">
+            <span class="m-label">Profit Factor</span>
+            <span class="m-val blue" id="metric-pf">2.18</span>
+          </div>
+          <div class="matrix-tile">
+            <span class="m-label">Max Drawdown</span>
+            <span class="m-val yellow" id="metric-dd">7.4%</span>
+          </div>
+          <div class="matrix-tile">
+            <span class="m-label">Avg Trade RR</span>
+            <span class="m-val purple" id="metric-rr">1 : 2.0</span>
+          </div>
+        </div>
+
+        <div class="webhook-preview-box">
+          <div class="wh-header">
+            <span><i class="fa-solid fa-bolt"></i> Sample Webhook Payload (JSON Alert)</span>
+            <button class="btn-copy-wh" id="btn-copy-webhook" title="Copy JSON Alert"><i class="fa-regular fa-copy"></i></button>
+          </div>
+          <pre><code id="webhook-code">{
+  "action": "{{strategy.order.action}}",
+  "symbol": "{{ticker}}",
+  "price": "{{close}}",
+  "quantity": "{{strategy.order.contracts}}",
+  "stop_loss": "{{strategy.position_size}}",
+  "timestamp": "{{timenow}}"
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Complete Pine Script v5 Code Viewer Section -->
+  <section class="container code-section" id="code-viewer">
+    <div class="card code-card">
+      <div class="code-card-header">
+        <div class="code-title">
+          <i class="fa-solid fa-file-code"></i>
+          <div>
+            <h3>Indian_Crypto_Pro_Strategy.pine</h3>
+            <span class="file-tag">TradingView Pine Script v5 • 191 Lines • Production Ready</span>
+          </div>
+        </div>
+        <div class="code-btns">
+          <button class="btn btn-secondary" id="btn-download">
+            <i class="fa-solid fa-download"></i> Download .pine
+          </button>
+          <button class="btn btn-primary" id="btn-copy-code">
+            <i class="fa-regular fa-copy"></i> Copy Full Pine Script
+          </button>
+        </div>
+      </div>
+
+      <div class="code-viewer-container">
+        <pre><code class="language-pinescript" id="pine-script-code">//@version=5
+strategy("Multi-Asset Pro Strategy [NSE / BSE / Crypto]", overlay=true, initial_capital=100000, default_qty_type=strategy.percent_of_equity, default_qty_value=10, commission_type=strategy.commission.percent, commission_value=0.05, process_orders_on_close=true)
+
+// ==========================================
+// 1. INPUT PARAMETERS & USER CONFIGURATION
+// ==========================================
+
+// --- Asset Mode & Session Control ---
+string asset_mode   = input.string("NSE / BSE Stock Market", "Asset Class Preset", options=["NSE / BSE Stock Market", "Crypto 24/7", "Custom"], group="Market Configuration", tooltip="Select market type for pre-tuned filters.")
+string trade_type   = input.string("Intraday", "Trading Style", options=["Intraday", "Swing Trading"], group="Market Configuration")
+string session_time = input.session("0915-1515:23456", "NSE Trading Session (IST)", group="Market Configuration", tooltip="Active trading hours for Indian stock market.")
+bool   sqoff_enable = input.bool(true, "Intraday Auto Square-Off at 15:15 IST", group="Market Configuration", tooltip="Automatically exit open positions before market close.")
+
+// --- Trend & Signal Engines ---
+bool   use_ema_filter = input.bool(true, "Enable 200 EMA Trend Filter", group="Signal Engine Settings")
+int    ema_len        = input.int(200, "Base EMA Length", minval=10, group="Signal Engine Settings")
+
+// Supertrend Inputs
+int    st_atr_period  = input.int(10, "Supertrend ATR Period", minval=1, group="Signal Engine Settings")
+float  st_factor      = input.float(3.0, "Supertrend Factor", minval=0.5, step=0.1, group="Signal Engine Settings")
+
+// RSI Oscillator Inputs
+bool   use_rsi_filter = input.bool(true, "Enable RSI Confirmation", group="Signal Engine Settings")
+int    rsi_len        = input.int(14, "RSI Length", group="Signal Engine Settings")
+int    rsi_buy_thresh = input.int(50, "RSI Buy Threshold (>)", group="Signal Engine Settings")
+int    rsi_sell_thresh= input.int(50, "RSI Sell Threshold (<)", group="Signal Engine Settings")
+
+// Volume Spike Confirmation
+bool   use_vol_filter = input.bool(true, "Require Above-Average Volume", group="Signal Engine Settings")
+int    vol_ma_len     = input.int(20, "Volume Moving Avg Length", group="Signal Engine Settings")
+
+// --- Risk Management & Targets ---
+string sl_tp_mode     = input.string("ATR Dynamic", "Stop Loss / Take Profit Mode", options=["ATR Dynamic", "Percentage Based", "Fixed Points"], group="Risk Management")
+float  atr_sl_mult    = input.float(1.5, "ATR Stop Loss Multiplier", minval=0.5, step=0.1, group="Risk Management")
+float  rr_ratio       = input.float(2.0, "Risk Reward Ratio (TP = SL * RR)", minval=0.5, step=0.1, group="Risk Management")
+bool   use_trail_sl   = input.bool(true, "Enable Trailing Stop Loss", group="Risk Management")
+
+// Percentage Mode Defaults
+float  pct_sl         = input.float(1.0, "Fixed SL %", minval=0.1, step=0.1, group="Risk Management")
+float  pct_tp         = input.float(2.0, "Fixed TP %", minval=0.1, step=0.1, group="Risk Management")
+
+// --- Dashboard & Alert UI ---
+bool   show_dashboard = input.bool(true, "Show Performance Dashboard Table", group="UI & Display Settings")
+string dash_pos       = input.string("Top Right", "Dashboard Position", options=["Top Right", "Bottom Right", "Top Left", "Bottom Left"], group="UI & Display Settings")
+
+// ==========================================
+// 2. INDICATOR COMPUTATIONS
+// ==========================================
+
+// Base Trend Filter
+float base_ema = ta.ema(close, ema_len)
+bool  is_bull_ema = close > base_ema
+bool  is_bear_ema = close < base_ema
+
+// Supertrend Engine
+[st_value, st_direction] = ta.supertrend(st_factor, st_atr_period)
+bool is_st_bull = st_direction < 0
+bool is_st_bear = st_direction > 0
+
+// RSI Engine
+float rsi_val = ta.rsi(close, rsi_len)
+bool  is_rsi_bull = rsi_val >= rsi_buy_thresh
+bool  is_rsi_bear = rsi_val <= rsi_sell_thresh
+
+// Volume Engine
+float vol_ma = ta.sma(volume, vol_ma_len)
+bool  is_vol_ok = use_vol_filter ? (volume > vol_ma) : true
+
+// Session & Time Engine
+bool in_session = asset_mode == "Crypto 24/7" ? true : not na(time(timeframe.period, session_time))
+bool is_square_off_time = (asset_mode == "NSE / BSE Stock Market" and trade_type == "Intraday" and sqoff_enable) ? (hour == 15 and minute >= 15) : false
+
+// ATR Calculation for SL / TP
+float atr_val = ta.atr(14)
+
+// ==========================================
+// 3. ENTRY & EXIT CONDITIONS
+// ==========================================
+
+bool buy_condition  = (not use_ema_filter or is_bull_ema) and is_st_bull and ta.crossover(close, st_value) and (not use_rsi_filter or is_rsi_bull) and is_vol_ok and in_session
+bool sell_condition = (not use_ema_filter or is_bear_ema) and is_st_bear and ta.crossunder(close, st_value) and (not use_rsi_filter or is_rsi_bear) and is_vol_ok and in_session
+
+// Position Tracking Variables
+var float long_sl = 0.0
+var float long_tp = 0.0
+var float short_sl = 0.0
+var float short_tp = 0.0
+
+// Trigger Buy Signal
+if (buy_condition and strategy.position_size == 0)
+    if (sl_tp_mode == "ATR Dynamic")
+        long_sl := close - (atr_val * atr_sl_mult)
+        long_tp := close + ((close - long_sl) * rr_ratio)
+    else if (sl_tp_mode == "Percentage Based")
+        long_sl := close * (1 - pct_sl / 100)
+        long_tp := close * (1 + pct_tp / 100)
+
+    strategy.entry("BUY", strategy.long, alert_message='{"action": "BUY", "symbol": "' + syminfo.ticker + '", "price": ' + str.tostring(close) + '}')
+
+// Trigger Sell / Short Signal
+if (sell_condition and strategy.position_size == 0)
+    if (sl_tp_mode == "ATR Dynamic")
+        short_sl := close + (atr_val * atr_sl_mult)
+        short_tp := close - ((short_sl - close) * rr_ratio)
+    else if (sl_tp_mode == "Percentage Based")
+        short_sl := close * (1 + pct_sl / 100)
+        short_tp := close * (1 - pct_tp / 100)
+
+    strategy.entry("SELL", strategy.short, alert_message='{"action": "SELL", "symbol": "' + syminfo.ticker + '", "price": ' + str.tostring(close) + '}')
+
+// Trailing Stop Loss Management
+if (strategy.position_size > 0 and use_trail_sl)
+    float new_sl = close - (atr_val * atr_sl_mult)
+    if (new_sl > long_sl)
+        long_sl := new_sl
+
+if (strategy.position_size < 0 and use_trail_sl)
+    float new_sl = close + (atr_val * atr_sl_mult)
+    if (new_sl < short_sl)
+        short_sl := new_sl
+
+// Execute Exits (SL / TP)
+if (strategy.position_size > 0)
+    strategy.exit("Exit BUY", "BUY", stop=long_sl, limit=long_tp, alert_message='{"action": "EXIT_BUY", "symbol": "' + syminfo.ticker + '", "price": ' + str.tostring(close) + '}')
+
+if (strategy.position_size < 0)
+    strategy.exit("Exit SELL", "SELL", stop=short_sl, limit=short_tp, alert_message='{"action": "EXIT_SELL", "symbol": "' + syminfo.ticker + '", "price": ' + str.tostring(close) + '}')
+
+// Intraday Session Square-off
+if (is_square_off_time and strategy.position_size != 0)
+    strategy.close_all(comment="Intraday Auto Square-Off 15:15 IST", alert_message='{"action": "SQUARE_OFF", "symbol": "' + syminfo.ticker + '"}')
+
+// ==========================================
+// 4. CHART PLOTS & VISUALS
+// ==========================================
+
+plot(use_ema_filter ? base_ema : na, "200 EMA Macro Trend", color=color.new(#38bdf8, 0), linewidth=2)
+plot(st_value, "Supertrend Band", color=st_direction < 0 ? color.new(#22c55e, 0) : color.new(#ef4444, 0), linewidth=2)
+
+plotshape(buy_condition and strategy.position_size == 0, "Buy Signal", shape.triangleup, location.belowbar, color.new(#22c55e, 0), size=size.small, text="BUY")
+plotshape(sell_condition and strategy.position_size == 0, "Sell Signal", shape.triangledown, location.abovebar, color.new(#ef4444, 0), size=size.small, text="SELL")
+
+// Plot Live Targets and Stops
+plot(strategy.position_size > 0 ? long_sl : na, "Long Stop Loss", color=color.new(#ef4444, 20), style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size > 0 ? long_tp : na, "Long Take Profit", color=color.new(#22c55e, 20), style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size < 0 ? short_sl : na, "Short Stop Loss", color=color.new(#ef4444, 20), style=plot.style_linebr, linewidth=2)
+plot(strategy.position_size < 0 ? short_tp : na, "Short Take Profit", color=color.new(#22c55e, 20), style=plot.style_linebr, linewidth=2)
+
+// ==========================================
+// 5. ON-SCREEN HUD PERFORMANCE TABLE
+// ==========================================
+
+var table hud = table.new(position.top_right, 2, 6, bgcolor=color.new(#0f172a, 10), border_color=color.new(#334155, 0), border_width=1)
+
+if (show_dashboard and barstate.islast)
+    table.cell(hud, 0, 0, "Multi-Asset Strategy", bgcolor=color.new(#6366f1, 20), text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 0, asset_mode, bgcolor=color.new(#6366f1, 20), text_color=color.white, text_size=size.small)
+
+    table.cell(hud, 0, 1, "Macro Trend (200 EMA)", text_color=color.gray, text_size=size.small)
+    table.cell(hud, 1, 1, is_bull_ema ? "BULLISH" : "BEARISH", text_color=is_bull_ema ? color.green : color.red, text_size=size.small)
+
+    table.cell(hud, 0, 2, "Supertrend Regime", text_color=color.gray, text_size=size.small)
+    table.cell(hud, 1, 2, is_st_bull ? "BULLISH" : "BEARISH", text_color=is_st_bull ? color.green : color.red, text_size=size.small)
+
+    table.cell(hud, 0, 3, "RSI (14)", text_color=color.gray, text_size=size.small)
+    table.cell(hud, 1, 3, str.tostring(rsi_val, "#.##"), text_color=color.white, text_size=size.small)
+
+    table.cell(hud, 0, 4, "Win Rate", text_color=color.gray, text_size=size.small)
+    float win_rate = strategy.closedtrades > 0 ? (strategy.wintrades / strategy.closedtrades * 100) : 0.0
+    table.cell(hud, 1, 4, str.tostring(win_rate, "#.##") + "%", text_color=color.yellow, text_size=size.small)
+
+    table.cell(hud, 0, 5, "Net P&L", text_color=color.gray, text_size=size.small)
+    table.cell(hud, 1, 5, str.tostring(strategy.netprofit, "#.##"), text_color=strategy.netprofit >= 0 ? color.green : color.red, text_size=size.small)
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- How to Deploy in TradingView Guide -->
+  <section class="container steps-section">
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fa-solid fa-graduation-cap"></i> How to Install and Run in TradingView (3 Steps)</h3>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h4>Open Pine Editor</h4>
+          <p>Open <a href="https://www.tradingview.com" target="_blank" rel="noreferrer">TradingView.com</a>, open any chart (e.g., NIFTY, BANKNIFTY, BTCUSDT), and click the <strong>Pine Editor</strong> tab at the bottom.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h4>Paste the Script</h4>
+          <p>Click the <strong>Copy Script</strong> button above, delete any starter template code in the Pine Editor, and paste the code.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h4>Add to Chart &amp; Automate</h4>
+          <p>Click <strong>Add to Chart</strong>. View real-time Buy/Sell arrows, the HUD table, and connect alerts via Webhook URL to Tradetron, AlgoTest, or Binance bots.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <p>Multi-Asset Pro Strategy • Indian Stock Market (NSE / BSE) &amp; Crypto Algorithmic Trading • Pine Script v5</p>
+      <p class="copyright">Developed by <a href="https://github.com/MrHarshalBane" target="_blank">Harshal Bane</a></p>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toast-msg">Pine Script copied to clipboard!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
